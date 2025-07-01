@@ -1,36 +1,50 @@
-Index
-- Purpose
-- Tech stack
-- How to use
-- How to build from scratch
+# 🧱 Fullstack Starter Monorepo
 
+A batteries-included fullstack monorepo template for rapidly launching full-featured web and mobile apps. Designed for scalable team development or high-velocity solo prototyping.
 
-Purpose: base template monorepo full stack for quick starting projects
+---
 
-Tech stack:
-- back-end: Laravel with Sanctum & JWT authentication
-- front-end-web: Vite React Typescript+SWC
-- front-end-mobile: expo?
-- fastapi-ms: fastAPI pydantic AI agent with back-end coordination
+## 🧠 Purpose
 
-How to use:
-git clone
-docker-compose up
-docker-compose build
-docker-compose run
+Provide a canonical starter with opinionated best practices, full-stack authentication, clean code boundaries, and dev tools already wired up. Built for Laravel, React, FastAPI, and containerized workflows.
 
-## How to build from scratch: (via WSL2)
-# Dependencies
-sudo apt update
-sudo apt install php8.3-xml (necessary for sanctum)
+---
 
-# Actions
-mkdir project-root && cd project-root
+## 🧰 Tech Stack
 
-composer create-project laravel/laravel back-end
-composer require laravel/sanctum
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+### 🖥 Backend
 
-npm create vite@latest front-end-web --template react-ts
-cd front-end-web
-npm install
+- **Laravel** 12 (PHP 8.3)
+- **Sanctum** for API token auth (SPA and mobile)
+- **Fortify** for auth scaffolding (registration, login, password reset, etc.)
+- **FastAPI** (Python 3.11) for AI microservices
+- **Pydantic AI Agents** with Laravel job orchestration
+
+### 🌐 Web Frontend
+
+- **React** + **TypeScript**
+- **Vite** (fast dev bundling) + **SWC** (next-gen transpilation)
+- **Tailwind CSS**
+- **JWT Auth** via Laravel Sanctum
+
+### 📱 Mobile Frontend
+
+- **Expo React Native** (TypeScript, shared packages WIP)
+
+### ⚙️ Infra & Tooling
+
+- **Docker Compose** for full container orchestration
+- **Redis** for queue, cache, session
+- **MailHog** for email capture in dev
+- **SQLite3** (dev), **PostgreSQL** or **MySQL** (prod)
+- **pnpm/Yarn Workspaces** for monorepo structure
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repo
+
+```bash
+git clone https://github.com/your-username/fullstack-start.git
+cd fullstack-start

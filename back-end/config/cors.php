@@ -12,6 +12,3 @@ return [
     // this is important to prevent session cookies web auth
     'supports_credentials' => false, 
 ];
-
-// bootstrap/app.php
-	withMiddleware: "$middleware->append(\Illuminate\Http\Middleware\HandleCors::class);"

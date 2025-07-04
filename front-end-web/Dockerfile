@@ -1,5 +1,10 @@
 FROM node:20
 
+# Install deps
+COPY package*.json ./
+RUN npm install
+
+# Copy rest of code
 WORKDIR /app
 COPY . .
 

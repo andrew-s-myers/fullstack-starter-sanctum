@@ -6,6 +6,10 @@ RUN apt update && apt install -y curl && \
     pipx ensurepath && \
     pipx install uv
 
+# Install deps
+COPY package*.json ./
+RUN npm install
+
 WORKDIR /app
 COPY . .
 

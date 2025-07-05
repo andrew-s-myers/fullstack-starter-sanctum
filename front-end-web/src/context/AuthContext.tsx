@@ -1,79 +1,105 @@
-import { createContext, useContext, useState } from "react";
+// imports
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    type ReactNode,
+} from 'react';
+import axios from 'axios';
 
+// types
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+}
 
+interface Credentials {
+    email: string;
+    password: string;
+}
 
-const AuthContext = createContext();
+interface RegisterData extends Credentials {
+    name: string;
+    password_confirmation: string;
+}
 
-export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const API_BASE = import.meta.env.VITE_API_BASE_URL;
+interface AuthContextShape {
+    user: User | null;
+    token: string | null;
+    register: (d: RegisterData) => Promise<void>;
+    login: (c: Credentials) => Promise<void>;
+    logout: () => Promise<void>;
+    refresh: () => Promise<void>;
+}
 
-    async function register ({ name, email, password, password_confirmation }) {
-        const response = await fetch(`${API_BASE}/register`, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name,
-                email,
-                password,
-                password_confirmation,
-            }),
-        });
-        if (!response.ok) throw await response.json();
-        const userData = await response.json();
+// context
+const AuthContext = createContext<AuthContextShape | undefined>(undefined);
 
-        // set front-end user state and store token in localStorage
-        setUser(userData.user);
-        localStorage.setItem("token", userData.token);
+const API = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+});
 
-        return userData;
+// attach token automatically
+API.interceptors.request.use((cfg) => {
+    const token = localStorage.getItem('token');
+    if (token) cfg.headers.Authorization = `Bearer ${token}`;
+    return cfg;
+});
+
+export function AuthProvider({ children }: {children: ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(
+        () => localStorage.getItem('token') || null,
+    );
+
+    // fetch user once token exists
+    useEffect(() => {
+        if (token) refresh().catch(() => logout()); 
+    }, []);
+
+    async function register(data: RegisterData) {
+        const { data: res } = await API.post('/register', data);
+        persist(res.user, res.token);
     }
 
-    async function login ({ email, password }) {
-        const response = await fetch(`${API_BASE}/login`, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-            }),
-        });
-        
-        if (!response.ok) throw await response.json();
-        const userData = await response.json();
-        // This sets the front-end state for the logged in user. 
-        setUser(userData.user)
-        localStorage.setItem('token', userData.token);
-        return userData;
+    async function login(creds: Credentials) {
+        const { data: res } = await API.post('/login', creds);
+        persist(res.user, res.token);
     }
 
-    const logout = async () => {
-        const token = localStorage.getItem("token");
-        await fetch(`${API_BASE}/logout`, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-            },
-        });
-        localStorage.removeItem("token");
-        setUser(null);
+    async function refresh() {
+        const { data } = await.API.get<User>('/user');
+        setUser(data);
+    }
+
+    function persist(u: User, t: string) {
+        setUser(u);
+        setToken(t);
+        localStorage.setItem('token', t);
+    }
+
+    async function logout() {
+        try {
+            await API.post('/logout');
+        } finally {
+            localStorage.removeItem('token');
+            setUser(null);
+            setToken(null);
+        }
     }
 
     return (
-        <AuthContext.Provider value={{ user, register, login, logout }}>
+        <AuthContext.Provider value={{ user, token, register, login, logout, refresh }}>
             {children}
         </AuthContext.Provider>
-    )
+    );
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
+    return ctx;
 }

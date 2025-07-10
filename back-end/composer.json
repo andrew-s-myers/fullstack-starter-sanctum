@@ -54,7 +54,8 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
-        ]
+        ],
+		"reset-db": "rm database/database.sqlite && touch database/database.sqlite && php artisan migrate:fresh --seed"
     },
     "extra": {
         "laravel": {

@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  laravel:
+  back-end:
     build: ./back-end
     ports:
       - "8000:8000"
@@ -9,19 +9,26 @@ services:
     depends_on:
       - redis
 
-  frontend:
-    build: ./front-end
+  front-end-web:
+    build: ./front-end-web
     ports:
       - "5173:5173"
     volumes:
-      - ./front-end:/app
+      - ./front-end-web:/app
 
-  fastapi:
-    build: ./fastapi-ms
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./fastapi-ms:/app
+  # frontend-mobile:
+  #   build: ./front-end
+  #   ports:
+  #     - "###:###"
+  #   volumes:
+  #     - ./front-end-mobile:/app
 
-  redis:
-    image: redis:alpine
+  # fastapi:
+  #   build: ./fastapi-ms
+  #   ports:
+  #     - "8001:8001"
+  #   volumes:
+  #     - ./fastapi-ms:/app
+
+  # redis:
+  #   image: redis:alpine

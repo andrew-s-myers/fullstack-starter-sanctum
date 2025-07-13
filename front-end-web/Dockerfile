@@ -1,13 +1,30 @@
+# FROM node:20
+
+# # Install deps
+# COPY package*.json ./
+# RUN npm install
+
+# # Copy rest of code
+# WORKDIR /app
+# COPY . .
+
+# RUN npm install
+# EXPOSE 5173
+# CMD ["npm", "run", "dev", "--", "--host"]
+
 FROM node:20
 
-# Install deps
+WORKDIR /app
+
+# Copy package files and install deps first (better caching)
 COPY package*.json ./
 RUN npm install
 
-# Copy rest of code
-WORKDIR /app
+# Copy everything else
 COPY . .
 
-RUN npm install
+# Expose Vite + Vitest UI
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host"]
+EXPOSE 51999
+
+# No CMD — define it per-service in docker-compose.yml

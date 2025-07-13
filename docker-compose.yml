@@ -11,9 +11,22 @@ services:
   front-end-web:
     build: ./front-end-web
     ports:
-      - "5173:5173"
+      - "5173:5173"     # Vite
     volumes:
       - ./front-end-web:/app
+    command: npm run dev -- --host
+
+  vitest:
+    build: 
+      context: ./front-end-web
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - ./front-end-web:/app
+    ports:
+      - "51999:51999"
+    command: npx vitest --ui --watch --api.port=51999 --config ./vitest.config.ts
+
   # frontend-mobile:
   #   build: ./front-end
   #   ports:

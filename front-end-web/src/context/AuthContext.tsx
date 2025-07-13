@@ -71,7 +71,7 @@ export function AuthProvider({ children }: {children: ReactNode }) {
     }
 
     async function refresh() {
-        const { data } = await.API.get<User>('/user');
+        const { data } = await API.get<User>('/user');
         setUser(data);
     }
 

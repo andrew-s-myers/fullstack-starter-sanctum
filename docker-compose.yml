@@ -26,6 +26,8 @@ services:
     ports:
       - "51999:51999"
     command: npx vitest --ui --watch --api.port=51999 --config ./vitest.config.ts
+    stdin_open: true # equivalent to docker run -i
+    tty: true # equivalent to docker run -t
 
   # frontend-mobile:
   #   build: ./front-end

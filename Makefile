@@ -1,7 +1,10 @@
 dev:
 	docker compose up -d back-end front-end-web
 
-test-ui:
+test-phpunit:
+	docker compose exec back-end php artisan test
+
+test-vitest:
 	docker compose run --rm --service-ports vitest
 
 reset-db:

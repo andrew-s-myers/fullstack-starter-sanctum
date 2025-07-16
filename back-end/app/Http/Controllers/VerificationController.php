@@ -7,21 +7,21 @@ use Illuminate\Http\Request;
 
 class VerificationController extends Controller
 {
-    public function verify(Request $r, $id, $hash)
-    {
-        $user = \App\Models\User::findOrFail($id);
+	public function verify(Request $r, $id, $hash)
+	{
+		$user = \App\Models\User::findOrFail($id);
 
-        if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
-            return response()->json(['message' => 'Invalid hash'], 403);
-        }
+		if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
+			return response()->json(['message' => 'Invalid hash'], 403);
+		}
 
-        if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Already verified']);
-        }
+		if ($user->hasVerifiedEmail()) {
+			return response()->json(['message' => 'Already verified']);
+		}
 
-        $user->markEmailAsVerified();
-        event(new Verified($user));
+		$user->markEmailAsVerified();
+		event(new Verified($user));
 
-        return response()->json(['message' => 'Email verified']);
-    }
+		return response()->json(['message' => 'Email verified']);
+	}
 }

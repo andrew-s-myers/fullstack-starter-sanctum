@@ -1,30 +1,28 @@
-# FROM node:20
-
-# # Install deps
-# COPY package*.json ./
-# RUN npm install
-
-# # Copy rest of code
-# WORKDIR /app
-# COPY . .
-
-# RUN npm install
-# EXPOSE 5173
-# CMD ["npm", "run", "dev", "--", "--host"]
-
-FROM node:20
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files and install deps first (better caching)
-COPY package*.json ./
-RUN npm install
+# Install system dependencies needed for some npm packages
+RUN apk add --no-cache git
 
-# Copy everything else
+# Copy package files and install dependencies first (better caching)
+COPY package*.json ./
+RUN npm ci --only=production=false
+
+# Copy source code
 COPY . .
 
-# Expose Vite + Vitest UI
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S reactdev -u 1001
+
+# Change ownership of app directory
+RUN chown -R reactdev:nodejs /app
+USER reactdev
+
+# Expose ports for Vite dev server and Vitest UI
 EXPOSE 5173
 EXPOSE 51999
 
-# No CMD — define it per-service in docker-compose.yml
+# Default command for development
+CMD ["npm", "run", "dev"]

@@ -32,19 +32,29 @@ This document outlines a systematic approach to rapidly develop fullstack applic
 
 ### 1.2 Development Experience Tools
 - [ ] **API Documentation Generation**
+  - OpenAPI spec generation from YAML behaviors (behavior-driven contracts)
   - Laravel API documentation auto-generation (Scribe/L5-Swagger)
-  - OpenAPI spec generation from routes
-  - Interactive API explorer (Swagger UI)
+  - Interactive API explorer (Swagger UI) with behavior context
+  - Client SDK generation from OpenAPI specs
 
-- [ ] **Database Visualization**
-  - ER diagram generation from migrations
+- [ ] **C4 Architecture Visualization with Structurizr**
+  - `/docs/system-architecture.md` as single source of truth for C4 model
+  - Structurizr DSL generation from behaviors + architecture definitions
+  - Auto-sync: behaviors → system-architecture.md → Structurizr diagrams
+  - Container relationship mapping based on API endpoints in YAML behaviors
+  - Architecture drift detection (behaviors ↔ implementation ↔ C4 model)
+
+- [ ] **Database & System Visualization**
+  - ER diagram generation from migrations (integrated with C4 data containers)
   - Database schema documentation
   - Migration dependency visualization
+  - System context diagrams showing external dependencies
 
 - [ ] **Code Quality Automation**
   - Pre-commit hooks for code formatting
   - Automated dependency updates
   - Security scanning integration
+  - Architecture compliance validation
 
 ### 1.3 Future Architecture Preparation
 - [ ] **Redis Cache Layer**
@@ -69,16 +79,28 @@ This document outlines a systematic approach to rapidly develop fullstack applic
 
 ### 2.1 Custom YAML Templates (Cucumber-like without Gherkin)
 
-**Core Template Structure**:
+**Enhanced Template with C4 Integration**:
 ```yaml
 # behaviors/user-authentication.yml
+schema_version: "1.0"
 domain: user_management
 feature: authentication
 description: Users can register, login, and manage their accounts securely
 
+# C4 Architecture Context (feeds into system-architecture.md)
+architecture:
+  primary_container: web_application  # Maps to C4 container in system-architecture.md
+  container_dependencies: [database, email_service]  # Container relationships
+  external_systems: [smtp_provider]  # External dependencies for C4 context
+  data_flows:
+    - "web_application -> database: user data"
+    - "web_application -> email_service: confirmation emails"
+    - "email_service -> smtp_provider: SMTP relay"
+
 behaviors:
   - name: user_registration
     scenario: New user creates account
+    containers_involved: [web_application, database, email_service]  # For C4 component diagrams
     given:
       - system: clean state
       - user: does not exist with email "test@example.com"
@@ -91,6 +113,7 @@ behaviors:
     
   - name: user_login
     scenario: Existing user authenticates
+    containers_involved: [web_application, database]
     given:
       - user: exists with verified email "test@example.com"
     when:
@@ -101,11 +124,11 @@ behaviors:
       - session: is established
 
 validation_rules:
-  - email: must be valid format
-  - password: minimum 8 characters, one uppercase, one number
-  - rate_limiting: max 5 login attempts per minute
+  email: must be valid format
+  password: minimum 8 characters, one uppercase, one number
+  rate_limiting: max 5 login attempts per minute
 
-api_endpoints:
+api_endpoints:  # Used for OpenAPI generation AND C4 interface mapping
   - POST /api/register
   - POST /api/login
   - POST /api/logout
@@ -161,16 +184,17 @@ ui_components:
   format: array of component names (optional)
 ```
 
-### 2.3 YAML ↔ Code Reconciliation Strategy
+### 2.3 Multi-Layer Reconciliation Strategy
 
-**Problem**: Manual code changes can diverge from YAML behavior definitions.
+**Problem**: Manual changes can diverge across YAML behaviors, C4 architecture, OpenAPI specs, and implementation code.
 
-**Solution - Lockfile Strategy**:
-- [ ] **Behavior Lockfile System**
-  - Generate `.behavior-lock.json` from YAML definitions
-  - Track generated code fingerprints and modification timestamps
-  - Detect manual modifications vs. generated code changes
-  - Provide merge conflict resolution for YAML ↔ code mismatches
+**Solution - Enhanced Tracking System**:
+- [ ] **Multi-Layer Lockfile System**
+  - Generate `.behavior-lock.jsonl` from YAML definitions
+  - Track architecture changes in `.architecture-sync.json`
+  - OpenAPI spec versioning aligned with behavior versions
+  - C4 diagram generation timestamps and source tracking
+  - Detect drift across: Behaviors ↔ Architecture ↔ OpenAPI ↔ Implementation
 
 - [ ] **Code Drift Detection**
   - `make check-drift` command to identify YAML/code inconsistencies
@@ -222,7 +246,43 @@ make reconcile --interactive
     make migrate-schema ROLLBACK=1.0
     ```
 
-### 2.5 YAML Processing Tools
+### 2.5 System Architecture Documentation
+
+- [ ] **`/docs/system-architecture.md` Specification**
+  - C4 Level 2 (Container) architecture definitions
+  - Container descriptions, technologies, and responsibilities  
+  - External system dependencies and interfaces
+  - Data flow documentation between containers
+  - Integration points with behavior definitions
+
+**Example Structure**:
+```markdown
+# System Architecture
+
+## Containers
+
+### Web Application (Laravel)
+- Technology: PHP 8.3, Laravel 12, Sanctum
+- Responsibility: API endpoints, authentication, business logic
+- Dependencies: Database, Email Service
+- Behavior Domains: user_management, content_management
+
+### Database (SQLite/PostgreSQL)  
+- Technology: SQLite (dev), PostgreSQL (prod)
+- Responsibility: Data persistence, user data, content storage
+- Accessed By: Web Application, FastAPI MS
+
+### Email Service (Internal)
+- Technology: Laravel Mail, Queue
+- Responsibility: User notifications, confirmations
+- External Dependencies: SMTP Provider
+
+## External Systems
+- SMTP Provider: Email delivery
+- CDN: Static asset delivery (future)
+```
+
+### 2.6 YAML Processing Tools
 - [ ] **YAML Parser & Validator**
   - Custom YAML schema validation against versioned contract
   - Behavior definition linting
@@ -303,29 +363,31 @@ make scaffold-code         # docker compose run --rm code-scaffolder
 3. Update documentation automatically
 4. Deploy to staging for acceptance testing
 
-### 3.3 AI-Assisted Development Commands
+### 3.3 Enhanced Development Commands
 
 ```bash
-# Setup new feature from behavior definition
-make new-feature BEHAVIOR=behaviors/user-management.yml
+# Behavior-driven development with full integration
+make new-feature BEHAVIOR=behaviors/user-management.yml  # Updates: Tests + OpenAPI + C4
+make generate-tests                                       # From behaviors
+make generate-openapi                                     # From behaviors + architecture
+make scaffold-code DOMAIN=user_management               # With architecture context
 
-# Generate tests from all behavior files
-make generate-tests
+# Architecture & Documentation
+make c4-sync                                             # Sync behaviors → system-architecture.md → Structurizr
+make docs-generate                                       # OpenAPI + C4 + behavior docs
+make architecture-validate                              # Multi-layer consistency check
 
-# Scaffold code from behavior definitions
-make scaffold-code DOMAIN=user_management
+# Comprehensive validation
+make validate-behaviors                                  # YAML schema validation
+make validate-openapi                                   # API contract validation
+make validate-architecture                              # C4 model consistency
+make check-drift                                        # All layers: behaviors ↔ OpenAPI ↔ C4 ↔ code
 
-# Run behavior validation
-make validate-behaviors
-
-# Generate API documentation from behaviors
-make docs-api
-
-# Full development cycle
-make develop FEATURE=user-authentication
+# Unified development workflow
+make develop FEATURE=user-authentication               # Full cycle: behaviors → tests → OpenAPI → C4 → implementation
 ```
 
-### 3.4 Behavior-Driven File Organization
+### 3.4 Integrated Architecture & Behavior Organization
 
 ```
 project-root/
@@ -335,20 +397,27 @@ project-root/
 │   ├── shared/
 │   └── schema/                # YAML schema definitions
 │       └── behavior-schema-v1.0.yml
-├── generated/                  # Auto-generated code & artifacts
-│   ├── tests/
-│   ├── scaffolds/
-│   ├── docs/
-│   └── .behavior-lock.json    # Lockfile for YAML ↔ code reconciliation
+├── docs/                      # Architecture documentation
+│   ├── system-architecture.md # C4 model source of truth
+│   └── c4-diagrams/           # Generated Structurizr artifacts
+│       ├── workspace.dsl      # Structurizr DSL
+│       ├── context.puml       # System context diagram
+│       ├── containers.puml    # Container diagram
+│       └── components/        # Component diagrams per container
+├── generated/                  # Auto-generated artifacts
+│   ├── tests/                 # Behavior-driven tests
+│   ├── scaffolds/             # Code scaffolding
+│   ├── api-docs/              # OpenAPI specs + Swagger UI
+│   ├── .behavior-lock.jsonl   # Multi-layer tracking
+│   └── .architecture-sync.json # C4 sync metadata
 ├── back-end/                   # Laravel API (Docker: back-end service)
 ├── front-end-web/             # React TypeScript (Docker: front-end-web service)
 ├── front-end-mobile/          # React Native (future)
 ├── fastapi-ms/                # AI coordination service (Docker: fastapi-ms service)
-└── tools/                     # Custom development tools (Docker containers)
-    ├── yaml-processor/        # Docker: yaml-processor service
-    ├── test-generator/        # Docker: test-generator service
-    ├── code-scaffolder/       # Docker: code-scaffolder service
-    └── reconciler/            # Docker: reconciler service
+└── tools/                     # Enhanced development tools
+    ├── behavior-engine/       # YAML processing + OpenAPI generation
+    ├── c4-sync/              # Structurizr integration
+    └── reconciler/            # Multi-layer drift detection
 ```
 
 ## Phase 4: Advanced Features & Optimizations
@@ -386,14 +455,21 @@ project-root/
   - Environment-specific configuration
   - Rollback strategies based on behavior tests
 
-### 4.4 Toolchain Testing & Validation
-- [ ] **Meta-Testing for Development Tools**
-  - Unit tests for YAML parser and validator
-  - Integration tests for test generation engine
-  - End-to-end tests for scaffolding generator
-  - Performance benchmarks for large behavior sets
-  - Reliability testing for lockfile/JSONL reconciliation
-  - Schema migration validation testing
+### 4.4 Efficient Toolchain Validation
+
+**Consolidated Meta-Testing** (Eliminating Tool Bloat):
+- [ ] **Unified Behavior Engine Testing**
+  - Combined validation: YAML + OpenAPI + C4 + code generation
+  - Architecture consistency testing: behaviors ↔ C4 ↔ implementation  
+  - Performance benchmarks for integrated workflow
+  - **REMOVED**: Separate testing for individual tools (unified approach)
+  - **FOCUS**: End-to-end developer workflow validation
+
+**Essential Tools Only**:
+- ✅ **Keep**: YAML behaviors, OpenAPI generation, C4/Structurizr, lockfile reconciliation
+- ✅ **Keep**: Playwright E2E, Vitest/PHPUnit, Tailwind integration
+- ❌ **Remove**: Separate API doc tools (use OpenAPI), separate ER diagrams (use C4)
+- ❌ **Remove**: Automated dependency updates (manual control preferred)
 
 ## Implementation Priority
 

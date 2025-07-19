@@ -102,6 +102,12 @@ make migrate-schema FROM=1.0 TO=1.1
 make migrate-schema FROM=1.0 TO=1.1 --dry-run
 make migrate-schema ROLLBACK=1.0
 
+# Architecture and documentation
+make c4-sync
+make docs-generate
+make validate-architecture
+make check-drift
+
 # E2E testing (to be implemented)
 make test-e2e
 ```
@@ -180,6 +186,15 @@ validation_rules:
 api_endpoints:
   - "METHOD /api/path"
 
+# C4 Architecture Context
+architecture:
+  primary_container: web_application
+  container_dependencies: [database, email_service]
+  external_systems: [smtp_provider]
+  data_flows:
+    - "web_application -> database: user data"
+    - "web_application -> email_service: notifications"
+
 ui_components:
   - ComponentName:
       tailwind_template: template_name
@@ -197,10 +212,12 @@ ui_components:
 **When Generating Code**:
 - Convert YAML behaviors to PHPUnit tests (back-end/tests/)
 - Convert YAML behaviors to Vitest tests (front-end-web/src/)
+- Generate OpenAPI specs from api_endpoints and behaviors
 - Generate Laravel controller/model scaffolds from api_endpoints
 - Generate React component scaffolds from ui_components with Tailwind CSS v4 integration
 - Apply design tokens and responsive patterns automatically
 - Include accessibility classes and ARIA attributes
+- Update C4 diagrams based on architecture context in behaviors
 - Maintain manual override zones in generated code
 
 **When Reviewing ATTACK-Driven Output**:
@@ -208,7 +225,10 @@ ui_components:
 - Check that implementation satisfies Given-When-Then scenarios
 - Validate API endpoints match behavior specifications
 - Ensure UI components support defined user interactions
-- Report any drift between YAML definitions and implementation
+- Validate OpenAPI specs align with behavior definitions
+- Check C4 architecture consistency with container relationships
+- Verify /docs/system-architecture.md reflects behavior architecture context
+- Report any drift between YAML definitions, OpenAPI, C4 model, and implementation
 
 ### Expected Output Structure
 
@@ -238,19 +258,28 @@ generated/scaffolds/
 │   └── {ComponentName}.stories.tsx # Storybook stories
 ├── routes/
 │   └── {domain}-routes.php
-└── styles/
-    └── {component-name}.tailwind.ts # Design token definitions
+├── styles/
+│   └── {component-name}.tailwind.ts # Design token definitions
+└── architecture/
+    ├── c4-workspace.dsl         # Structurizr DSL
+    └── openapi-spec.yml         # OpenAPI specification
 ```
 
 **Documentation Output**:
 ```
 generated/docs/
 ├── api/
-│   └── {domain}-api.md
+│   ├── openapi-spec.yml         # Generated from behaviors
+│   └── swagger-ui/              # Interactive API explorer
+├── c4-diagrams/
+│   ├── context.puml            # System context
+│   ├── containers.puml         # Container diagram
+│   └── components/             # Component diagrams
 ├── behaviors/
 │   └── {feature-name}-behavior.md
 └── coverage/
-    └── behavior-coverage-report.md
+    ├── behavior-coverage-report.md
+    └── architecture-consistency-report.md
 ```
 
 ## Important Notes

@@ -54,6 +54,9 @@ make test-phpunit
 make test-vitest
 # OR: docker compose run --rm --service-ports vitest
 
+# Run E2E tests with Playwright (Chromium + Mobile Chrome)
+docker compose --profile e2e run --rm e2e-tests npx playwright test
+
 # Run individual test files
 docker compose exec back-end php artisan test --filter=ExampleTest
 cd front-end-web && npm run test Button.test.tsx
@@ -108,19 +111,19 @@ make docs-generate
 make validate-architecture
 make check-drift
 
-# E2E testing (to be implemented)
-make test-e2e
+# E2E testing (6/6 tests passing with Chromium + Mobile Chrome)
+docker compose --profile e2e run --rm e2e-tests npx playwright test
 ```
 
 ## Architecture
 
 ### Backend Structure
 - **Framework**: Laravel 12 with PHP 8.3
-- **Authentication**: Laravel Sanctum for API token-based auth
+- **Authentication**: Laravel Sanctum for API token-based auth (using manual token validation due to Docker middleware recursion issue)
 - **Database**: SQLite for development, configured for PostgreSQL/MySQL in production
 - **Location**: `back-end/` directory
 - **Key Files**:
-  - `routes/api.php` - API routes with Sanctum middleware
+  - `routes/api.php` - API routes with manual Sanctum token validation
   - `app/Http/Controllers/AuthController.php` - Authentication endpoints
   - `config/sanctum.php` - Sanctum configuration with stateful domains
   - `database/migrations/` - Database schema definitions

@@ -15,6 +15,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - app-network
     # depends_on:
     #   - redis
 
@@ -28,6 +30,8 @@ services:
     environment:
       - VITE_API_BASE_URL=http://localhost:8000/api
     command: npm run dev -- --host
+    networks:
+      - app-network
     depends_on:
       - back-end
 
@@ -47,6 +51,27 @@ services:
     depends_on:
       - front-end-web
 
+  e2e-tests:
+    build:
+      context: .
+      dockerfile: playwright.Dockerfile
+    volumes:
+      - ./playwright:/app/playwright
+      - ./playwright.config.ts:/app/playwright.config.ts
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+    environment:
+      - CI=true
+      - PLAYWRIGHT_HTML_REPORT=/app/playwright/html-report
+      - FRONTEND_BASE_URL=http://front-end-web:5173
+    networks:
+      - app-network
+    depends_on:
+      - back-end
+      - front-end-web
+    profiles:
+      - e2e  # Only start when explicitly requested
+
   # redis:
   #   image: redis:alpine
   #   ports:
@@ -62,6 +87,10 @@ services:
   #     - ./fastapi-ms:/app
   #   depends_on:
   #     - redis
+
+networks:
+  app-network:
+    driver: bridge
 
 # volumes:
 #   redis_data:

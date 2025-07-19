@@ -1,5 +1,5 @@
 import { AuthProvider } from "./context/AuthContext";
-import { Routes, Route, Navigate } from react-router;
+import { Routes, Route, Navigate } from "react-router";
 
 import Home from "./Home";
 

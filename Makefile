@@ -7,6 +7,18 @@ test-phpunit:
 test-vitest:
 	docker compose run --rm --service-ports vitest
 
+test-e2e:
+	docker compose --profile e2e run --rm e2e-tests
+
+test-e2e-ui:
+	docker compose --profile e2e run --rm e2e-tests npx playwright test --ui
+
+test-e2e-headed:
+	docker compose --profile e2e run --rm e2e-tests npx playwright test --headed
+
+test-e2e-debug:
+	docker compose --profile e2e run --rm e2e-tests npx playwright test --debug
+
 reset-db:
 	docker compose exec back-end php artisan migrate:fresh --seed
 

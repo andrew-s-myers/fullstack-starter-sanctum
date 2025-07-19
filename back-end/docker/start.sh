@@ -7,8 +7,9 @@ php-fpm --daemonize
 # Run Laravel setup commands
 php artisan key:generate --force
 php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
+# Skip caching to avoid Sanctum middleware conflicts
+# php artisan config:cache
+# php artisan route:cache
 php artisan view:cache
 
 # Start nginx in the foreground

@@ -12,11 +12,22 @@ This document outlines a systematic approach to rapidly develop fullstack applic
 ## Phase 1: Project Setup & Tooling Infrastructure
 
 ### 1.1 Testing Infrastructure Gaps
-- [ ] **Playwright E2E Testing Setup**
+- [x] **Playwright E2E Testing Setup**
   - Install Playwright with TypeScript support
   - Configure for Laravel backend + React frontend integration
   - Set up test data seeding/cleanup workflows
   - Add to Makefile with `make test-e2e` command
+  - **Status**: 6/6 tests passing (Chromium + Mobile Chrome coverage)
+  - **Note**: Firefox/WebKit excluded due to Docker containerization networking limitations
+
+### 1.2 Docker Environment Issues (Technical Debt)
+- [ ] **Sanctum Middleware Recursion in Docker + NGINX**
+  - Issue: `auth:sanctum` middleware causes infinite recursion in containerized environment
+  - Works fine on local machine with same Laravel 12 + Sanctum setup
+  - Root cause: Likely NGINX FastCGI parameter handling or Docker request context
+  - Current workaround: Manual token validation using `PersonalAccessToken::findToken()`
+  - Investigation needed: Compare request headers/context between local vs Docker
+  - Impact: Cannot use convenient Laravel auth middleware, must implement auth manually per route
 
 - [ ] **Enhanced Backend Testing**
   - Add API testing with documented request/response examples
@@ -74,6 +85,33 @@ This document outlines a systematic approach to rapidly develop fullstack applic
   - Shared component library structure
   - Cross-platform navigation setup
   - Build/deployment automation
+
+### 1.3 Deployment & Monitoring Infrastructure
+- [ ] **Secrets Management**
+  - Docker Secrets integration for sensitive configuration
+  - Environment-specific secret rotation strategies
+  - Database credentials, API keys, and JWT secrets via Docker Secrets
+  - Development vs. production secret isolation
+
+- [ ] **Self-Managed VPS Deployment**
+  - Monorepo Docker image deployment via Docker Compose
+  - Cloudflare CDN integration for static assets and caching
+  - SSL/TLS termination and domain management
+  - Automated backup and disaster recovery procedures
+
+- [ ] **Error Tracking & Analytics**
+  - Sentry integration for both Laravel backend and React frontend
+  - PostHog for product analytics, feature flags, and user behavior tracking
+  - Real user monitoring (RUM) and performance insights
+  - Error alerting with contextual debugging information
+  - Release tracking and deployment impact analysis
+
+- [ ] **Future Scaling Architecture**
+  - Service separation strategy for fastapi-ms reflexive scaling
+  - Multi-VPS High Availability deployment patterns
+  - Backend for Frontend (BFF) layer design for API consolidation
+  - Load balancing and service discovery configuration
+  - Container orchestration migration path (Docker Swarm → Kubernetes)
 
 ## Phase 2: YAML-Based Behavior Definition System
 
